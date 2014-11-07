@@ -5,6 +5,7 @@ The muncher that persists events into the database.
 
 ## Microservice Info
 Channel: `event-muncher`
+
 Group: `event-messages`
 
 ## Installation and Execution
