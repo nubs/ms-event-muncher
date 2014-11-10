@@ -80,7 +80,7 @@ listen sock = do
 main :: IO ()
 main = do
   -- Connect to socket and login
-  sock <- esbInit "event-muncher-test-auto" [ "event-messages" ] host port
+  sock <- esbInit "event-muncher-test-auto" [ "event-messages", "api-messages" ] host port
 
   egIdUno <- nextRandom
   oIdUno <- nextRandom
