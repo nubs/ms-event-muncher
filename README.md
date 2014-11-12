@@ -11,12 +11,17 @@ Group: `event-messages`
 ## Installation and Execution
 To use `HelpEventMuncher`, do:
 
+1. `docker build --tag event_muncher .`
+2. `docker run --rm --privileged -itv "$(pwd):/code" event_muncher`
+
+If you do not wish to use a Docker instance, do:
+
 1. Install the [haskell-platform](https://www.haskell.org/platform).
-2. `cabal install help-esb`
-4. `git clone https://github.com/helpdotcom/help-event-muncher.hs`
-5. `cd help-event-muncher.hs`
-6. `ghc HelpEventMuncher.hs`
-7. `./HelpEventMuncher`
+2. `git clone https://github.com/helpdotcom/help-event-muncher.hs`
+3. `cd help-event-muncher.hs`
+4. `cabal install -j`
+5. `ghc HelpEventMuncher.hs`
+6. `./HelpEventMuncher`
 
 If you wish to build `HelpEsbClient` from source, do:
 

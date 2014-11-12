@@ -3,6 +3,7 @@
 module Main where
 
 import HelpEsbClient
+import Database.PostgreSQL.Simple
 
 -- JSON Data Structures
 import qualified JSON.Event.Response as Event.Response
@@ -43,6 +44,7 @@ instance EsbRecieve Event.Response.Message where
 -- ESB Environment
 host = "127.0.0.1"
 port = 8900
+database = "haskell"
 
 -- Listening Recursion
 listen :: Socket -> IO ()
@@ -68,6 +70,11 @@ listen sock = do
 -- Initialization
 main :: IO ()
 main = do
+  -- Connect to database
+  {-db <- connect defaultConnectInfo {
+    connectDatabase = database
+    }-}
+
   -- Connect to socket and login
   sock <- esbInit "event-muncher" [ "event-messages" ] host port
 
