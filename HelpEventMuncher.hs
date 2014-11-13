@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings, DeriveGeneric, MultiParamTypeClasses #-}
 
 module Main where
 
@@ -12,8 +12,8 @@ import qualified JSON.API.EventGroup.Post.Request as EventGroup.Post.Request
 import qualified JSON.API.Event.Post.Request as Event.Post.Request
 
 -- Recieve Socket Instances
-instance EsbRecieve EventGroup.Response.Message where
-  esbRecieve sock message = do
+instance EsbRecieveExternal EventGroup.Response.Message Connection where
+  esbRecieveExternal sock message db = do
     let payload = EventGroup.Response.h_data message
     logger ("EventGroup Response: " ++ show payload)
     -- Hit the API
@@ -25,8 +25,8 @@ instance EsbRecieve EventGroup.Response.Message where
       }
     esbSend sock request
 
-instance EsbRecieve Event.Response.Message where
-  esbRecieve sock message = do
+instance EsbRecieveExternal Event.Response.Message Connection where
+  esbRecieveExternal sock message db = do
     let payload = Event.Response.h_data message
     logger ("Event Response: " ++ show payload)
     -- Hit the API
@@ -42,13 +42,16 @@ instance EsbRecieve Event.Response.Message where
 
 
 -- ESB Environment
-host = "127.0.0.1"
-port = 8900
-database = "haskell"
+host = Nothing
+port = Nothing
+
+-- Database Environment
+dbHost = "api.help.com"
+dbName = "help"
 
 -- Listening Recursion
-listen :: Socket -> IO ()
-listen sock = do
+listen :: Socket -> Connection -> IO ()
+listen sock db = do
   -- Perform essential listening logic
   bytes <- esbListen sock
 
@@ -56,27 +59,30 @@ listen sock = do
     Left error -> return ()
     Right response -> do
       logger ("Response: " ++ show response)
-      esbRecieve sock response
+      esbRecieveExternal sock response db
 
   case eitherDecode bytes :: (Either String Event.Response.Message) of
     Left error -> return ()
     Right response -> do
       logger ("Response: " ++ show response)
-      esbRecieve sock response
+      esbRecieveExternal sock response db
 
   -- Recurse
-  listen sock
+  listen sock db
 
 -- Initialization
 main :: IO ()
 main = do
   -- Connect to database
-  {-db <- connect defaultConnectInfo {
-    connectDatabase = database
-    }-}
+  db <- connect defaultConnectInfo {
+      connectHost = dbHost
+    , connectDatabase = dbName
+    , connectUser = "postgres"
+    , connectPassword = "abc123"
+    }
 
   -- Connect to socket and login
   sock <- esbInit "event-muncher" [ "event-messages" ] host port
 
   -- Start Listening
-  listen sock
+  listen sock db
