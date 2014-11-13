@@ -18,4 +18,4 @@ cabal-version:       >=1.8
 executable HelpEventMuncher.hs
   main-is:             HelpEventMuncher.hs
   -- other-modules:       
-  build-depends:       base ==4.*, help-esb ==0.*, postgresql-simple ==0.*, text ==1.*, aeson ==0.*
+  build-depends:       base ==4.*, help-esb ==0.*, postgresql-simple ==0.*, text ==1.*, aeson ==0.*, network ==2.*

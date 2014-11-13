@@ -11,12 +11,12 @@ import qualified JSON.EventGroup.Response as EventGroup.Response
 import qualified JSON.API.EventGroup.Post.Request as EventGroup.Post.Request
 import qualified JSON.API.Event.Post.Request as Event.Post.Request
 
--- Recieve Socket Instances
+-- Recieve Socket Instances.
 instance EsbRecieveExternal EventGroup.Response.Message Connection where
   esbRecieveExternal sock message db = do
     let payload = EventGroup.Response.h_data message
     logger ("EventGroup Response: " ++ show payload)
-    -- Hit the API
+    -- Hit the API.
     let request = EventGroup.Post.Request.Data {
         EventGroup.Post.Request.h_eventGroupType = EventGroup.Response.h_eventGroupType payload
       , EventGroup.Post.Request.h_eventGroupId = EventGroup.Response.h_eventGroupId payload
@@ -29,7 +29,7 @@ instance EsbRecieveExternal Event.Response.Message Connection where
   esbRecieveExternal sock message db = do
     let payload = Event.Response.h_data message
     logger ("Event Response: " ++ show payload)
-    -- Hit the API
+    -- Hit the API.
     let request = Event.Post.Request.Data {
         Event.Post.Request.h_createdAt = Event.Response.h_createdAt payload
       , Event.Post.Request.h_content = Event.Response.h_content payload
@@ -52,28 +52,30 @@ dbName = "help"
 -- Listening Recursion
 listen :: Socket -> Connection -> IO ()
 listen sock db = do
-  -- Perform essential listening logic
-  bytes <- esbListen sock
+  -- Get messages and perform essential listening logic.
+  messages <- esbListen sock
 
-  case eitherDecode bytes :: (Either String EventGroup.Response.Message) of
-    Left error -> return ()
-    Right response -> do
-      logger ("Response: " ++ show response)
-      esbRecieveExternal sock response db
+  -- Iterate over messages.
+  forM_ messages $ \message -> do
+    case eitherDecode message :: (Either String EventGroup.Response.Message) of
+      Left error -> return ()
+      Right response -> do
+        logger ("Response: " ++ show response)
+        esbRecieveExternal sock response db
 
-  case eitherDecode bytes :: (Either String Event.Response.Message) of
-    Left error -> return ()
-    Right response -> do
-      logger ("Response: " ++ show response)
-      esbRecieveExternal sock response db
+    case eitherDecode message :: (Either String Event.Response.Message) of
+      Left error -> return ()
+      Right response -> do
+        logger ("Response: " ++ show response)
+        esbRecieveExternal sock response db
 
-  -- Recurse
+  -- Recurse.
   listen sock db
 
 -- Initialization
 main :: IO ()
 main = do
-  -- Connect to database
+  -- Connect to database.
   db <- connect defaultConnectInfo {
       connectHost = dbHost
     , connectDatabase = dbName
@@ -81,8 +83,8 @@ main = do
     , connectPassword = "abc123"
     }
 
-  -- Connect to socket and login
+  -- Connect to socket and login.
   sock <- esbInit "event-muncher" [ "event-messages" ] host port
 
-  -- Start Listening
+  -- Start Listening.
   listen sock db
