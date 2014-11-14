@@ -3,6 +3,7 @@
 module Main where
 
 import HelpEsbClient
+import Data.DateTime 
 
 -- JSON Data Structures
 import qualified JSON.Event.Request as Event.Request
@@ -101,8 +102,9 @@ main = do
 
   sIdUno <- nextRandom
   cIdUno <- nextRandom
+  timeUno <- getCurrentTime
   let eUno = Event.Request.Data {
-      Event.Request.h_createdAt = 1000
+      Event.Request.h_createdAt = toSeconds timeUno
     , Event.Request.h_content = "I need some shoes."
     , Event.Request.h_eventType = "message"
     , Event.Request.h_senderType = "customer"
@@ -116,8 +118,9 @@ main = do
 
   sIdDos <- nextRandom
   cIdDos <- nextRandom
+  timeDos <- getCurrentTime
   let eDos = Event.Request.Data {
-      Event.Request.h_createdAt = 1000
+      Event.Request.h_createdAt = toSeconds timeDos
     , Event.Request.h_content = "How do I do a barrel roll?"
     , Event.Request.h_eventType = "message"
     , Event.Request.h_senderType = "customer"
@@ -143,8 +146,9 @@ main = do
 
   sIdTres <- nextRandom
   cIdTres <- nextRandom
+  timeTres <- getCurrentTime
   let eTres = Event.Request.Data {
-      Event.Request.h_createdAt = 1000
+      Event.Request.h_createdAt = toSeconds timeTres
     , Event.Request.h_content = "I need some shoes."
     , Event.Request.h_eventType = "message"
     , Event.Request.h_senderType = "customer"

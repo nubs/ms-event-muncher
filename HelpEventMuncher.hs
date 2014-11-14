@@ -4,42 +4,46 @@ module Main where
 
 import HelpEsbClient
 import Database.PostgreSQL.Simple
+import System.Locale
+import Data.Time
+import Data.DateTime
 
 -- JSON Data Structures
 import qualified JSON.Event.Response as Event.Response
 import qualified JSON.EventGroup.Response as EventGroup.Response
-import qualified JSON.API.EventGroup.Post.Request as EventGroup.Post.Request
-import qualified JSON.API.Event.Post.Request as Event.Post.Request
 
 -- Recieve Socket Instances.
 instance EsbRecieveExternal EventGroup.Response.Message Connection where
   esbRecieveExternal sock message db = do
     let payload = EventGroup.Response.h_data message
     logger ("EventGroup Response: " ++ show payload)
-    -- Hit the API.
-    let request = EventGroup.Post.Request.Data {
-        EventGroup.Post.Request.h_eventGroupType = EventGroup.Response.h_eventGroupType payload
-      , EventGroup.Post.Request.h_eventGroupId = EventGroup.Response.h_eventGroupId payload
-      , EventGroup.Post.Request.h_ownerType = EventGroup.Response.h_ownerType payload
-      , EventGroup.Post.Request.h_ownerId = EventGroup.Response.h_ownerId payload
-      }
-    esbSend sock request
+
+    let eventGroupType = EventGroup.Response.h_eventGroupType payload
+    let eventGroupId = EventGroup.Response.h_eventGroupId payload
+    let ownerType = EventGroup.Response.h_ownerType payload
+    let ownerId = EventGroup.Response.h_ownerId payload
+
+    insert <- execute db "INSERT INTO event_group (id, type, owner_type, owner_id) VALUES (?, ?, ?, ?)" (eventGroupId, eventGroupType, ownerType, ownerId)
+    return ()
 
 instance EsbRecieveExternal Event.Response.Message Connection where
   esbRecieveExternal sock message db = do
     let payload = Event.Response.h_data message
     logger ("Event Response: " ++ show payload)
-    -- Hit the API.
-    let request = Event.Post.Request.Data {
-        Event.Post.Request.h_createdAt = Event.Response.h_createdAt payload
-      , Event.Post.Request.h_content = Event.Response.h_content payload
-      , Event.Post.Request.h_eventType = Event.Response.h_eventType payload
-      , Event.Post.Request.h_senderType = Event.Response.h_senderType payload
-      , Event.Post.Request.h_senderId = Event.Response.h_senderId payload
-      , Event.Post.Request.h_customerId = Event.Response.h_customerId payload
-      }
-    esbSend sock request
 
+    eventId <- nextRandom
+    let createdAtUtc = fromSeconds (Event.Response.h_createdAt payload)
+    let content = Event.Response.h_content payload
+    let eventType = Event.Response.h_eventType payload
+    let senderType = Event.Response.h_senderType payload
+    let senderId = Event.Response.h_senderId payload
+    let customerId = Event.Response.h_customerId payload
+    let eventGroupId = Event.Response.h_eventGroupId payload
+
+    let createdAt = formatTime defaultTimeLocale "%m/%d/%Y %l:%M:%S" createdAtUtc
+
+    insert <- execute db "INSERT INTO event (id, created_at, content, type, sender_type, sender_id, customer_id, event_group_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)" ((show eventId), createdAt, content, eventType, senderType, senderId, customerId, eventGroupId)
+    return ()
 
 -- ESB Environment
 host = Nothing

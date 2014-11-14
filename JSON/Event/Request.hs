@@ -20,7 +20,7 @@ data Meta = Meta
   } deriving (Show, Generic)
 
 data Data = Data
-  { h_createdAt :: Int
+  { h_createdAt :: Integer
   , h_content :: Text
   , h_eventType :: Text
   , h_senderType :: Text
