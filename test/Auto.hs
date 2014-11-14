@@ -10,6 +10,10 @@ import qualified JSON.Event.Response as Event.Response
 import qualified JSON.EventGroup.Request as EventGroup.Request
 import qualified JSON.EventGroup.Response as EventGroup.Response
 
+-- Test Only
+import Control.Concurrent
+delayTime = 1000
+
 -- Send Socket Instances
 instance EsbSend EventGroup.Request.Data where
   esbSend sock payload = do
@@ -51,27 +55,28 @@ instance EsbRecieve Event.Response.Message where
     logger("Event Response: " ++ show payload)
 
 -- ESB Environment
-host = "127.0.0.1"
-port = 8900
+host = Nothing
+port = Nothing
 
 -- Listening Recursion
 listen :: Socket -> IO ()
 listen sock = do
   -- Perform essential listening logic
-  bytes <- esbListen sock
+  messages <- esbListen sock
 
-  case eitherDecode bytes :: (Either String EventGroup.Response.Message) of
-    Left error -> return ()
-    Right response -> do
-      logger("Response: " ++ show response)
-      esbRecieve sock response
+  forM_ messages $ \message -> do
+    case eitherDecode message :: (Either String EventGroup.Response.Message) of
+      Left error -> return ()
+      Right response -> do
+        logger("Response: " ++ show response)
+        esbRecieve sock response
 
 
-  case eitherDecode bytes :: (Either String Event.Response.Message) of
-    Left error -> return ()
-    Right response -> do
-      logger("Response: " ++ show response)
-      esbRecieve sock response
+    case eitherDecode message :: (Either String Event.Response.Message) of
+      Left error -> return ()
+      Right response -> do
+        logger("Response: " ++ show response)
+        esbRecieve sock response
 
   -- Recurse
   listen sock
@@ -92,6 +97,8 @@ main = do
     }
   esbSend sock egUno
 
+  threadDelay delayTime
+
   sIdUno <- nextRandom
   cIdUno <- nextRandom
   let eUno = Event.Request.Data {
@@ -104,6 +111,8 @@ main = do
     , Event.Request.h_eventGroupId = toString egIdUno
     }
   esbSend sock eUno
+
+  threadDelay delayTime
 
   sIdDos <- nextRandom
   cIdDos <- nextRandom
@@ -118,6 +127,8 @@ main = do
     }
   esbSend sock eDos
 
+  threadDelay delayTime
+
   egIdDos <- nextRandom
   oIdDos <- nextRandom
   let egDos = EventGroup.Request.Data {
@@ -127,6 +138,8 @@ main = do
     , EventGroup.Request.h_ownerId = toString oIdDos
     }
   esbSend sock egDos
+
+  threadDelay delayTime
 
   sIdTres <- nextRandom
   cIdTres <- nextRandom
@@ -140,6 +153,8 @@ main = do
     , Event.Request.h_eventGroupId = toString egIdDos
     }
   esbSend sock eTres
+
+  threadDelay delayTime
 
   -- Start Listening
   listen sock

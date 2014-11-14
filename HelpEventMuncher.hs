@@ -1,8 +1,9 @@
-{-# LANGUAGE OverloadedStrings, DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings, DeriveGeneric, MultiParamTypeClasses #-}
 
 module Main where
 
 import HelpEsbClient
+import Database.PostgreSQL.Simple
 
 -- JSON Data Structures
 import qualified JSON.Event.Response as Event.Response
@@ -10,12 +11,12 @@ import qualified JSON.EventGroup.Response as EventGroup.Response
 import qualified JSON.API.EventGroup.Post.Request as EventGroup.Post.Request
 import qualified JSON.API.Event.Post.Request as Event.Post.Request
 
--- Recieve Socket Instances
-instance EsbRecieve EventGroup.Response.Message where
-  esbRecieve sock message = do
+-- Recieve Socket Instances.
+instance EsbRecieveExternal EventGroup.Response.Message Connection where
+  esbRecieveExternal sock message db = do
     let payload = EventGroup.Response.h_data message
     logger ("EventGroup Response: " ++ show payload)
-    -- Hit the API
+    -- Hit the API.
     let request = EventGroup.Post.Request.Data {
         EventGroup.Post.Request.h_eventGroupType = EventGroup.Response.h_eventGroupType payload
       , EventGroup.Post.Request.h_eventGroupId = EventGroup.Response.h_eventGroupId payload
@@ -24,11 +25,11 @@ instance EsbRecieve EventGroup.Response.Message where
       }
     esbSend sock request
 
-instance EsbRecieve Event.Response.Message where
-  esbRecieve sock message = do
+instance EsbRecieveExternal Event.Response.Message Connection where
+  esbRecieveExternal sock message db = do
     let payload = Event.Response.h_data message
     logger ("Event Response: " ++ show payload)
-    -- Hit the API
+    -- Hit the API.
     let request = Event.Post.Request.Data {
         Event.Post.Request.h_createdAt = Event.Response.h_createdAt payload
       , Event.Post.Request.h_content = Event.Response.h_content payload
@@ -41,35 +42,49 @@ instance EsbRecieve Event.Response.Message where
 
 
 -- ESB Environment
-host = "127.0.0.1"
-port = 8900
+host = Nothing
+port = Nothing
+
+-- Database Environment
+dbHost = "api.help.com"
+dbName = "help"
 
 -- Listening Recursion
-listen :: Socket -> IO ()
-listen sock = do
-  -- Perform essential listening logic
-  bytes <- esbListen sock
+listen :: Socket -> Connection -> IO ()
+listen sock db = do
+  -- Get messages and perform essential listening logic.
+  messages <- esbListen sock
 
-  case eitherDecode bytes :: (Either String EventGroup.Response.Message) of
-    Left error -> return ()
-    Right response -> do
-      logger ("Response: " ++ show response)
-      esbRecieve sock response
+  -- Iterate over messages.
+  forM_ messages $ \message -> do
+    case eitherDecode message :: (Either String EventGroup.Response.Message) of
+      Left error -> return ()
+      Right response -> do
+        logger ("Response: " ++ show response)
+        esbRecieveExternal sock response db
 
-  case eitherDecode bytes :: (Either String Event.Response.Message) of
-    Left error -> return ()
-    Right response -> do
-      logger ("Response: " ++ show response)
-      esbRecieve sock response
+    case eitherDecode message :: (Either String Event.Response.Message) of
+      Left error -> return ()
+      Right response -> do
+        logger ("Response: " ++ show response)
+        esbRecieveExternal sock response db
 
-  -- Recurse
-  listen sock
+  -- Recurse.
+  listen sock db
 
 -- Initialization
 main :: IO ()
 main = do
-  -- Connect to socket and login
+  -- Connect to database.
+  db <- connect defaultConnectInfo {
+      connectHost = dbHost
+    , connectDatabase = dbName
+    , connectUser = "postgres"
+    , connectPassword = "abc123"
+    }
+
+  -- Connect to socket and login.
   sock <- esbInit "event-muncher" [ "event-messages" ] host port
 
-  -- Start Listening
-  listen sock
+  -- Start Listening.
+  listen sock db
