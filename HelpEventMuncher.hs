@@ -5,6 +5,9 @@ module Main where
 import HelpEsbClient
 import Database.PostgreSQL.Simple
 import System.Locale
+import Data.List.Split
+import Data.Map
+import Data.Maybe
 import Data.Time
 import Data.DateTime
 
@@ -46,12 +49,22 @@ instance EsbRecieveExternal Event.Response.Message Connection where
     return ()
 
 -- ESB Environment
+host :: Maybe String
 host = Nothing
+port :: Maybe Int
 port = Nothing
 
 -- Database Environment
-dbHost = "api.help.com"
-dbName = "help"
+dbHost :: Maybe String
+dbHost = Nothing
+dbPort :: Maybe Int
+dbPort = Nothing
+dbName :: Maybe String
+dbName = Nothing
+dbUser :: Maybe String
+dbUser = Nothing
+dbPassword :: Maybe String
+dbPassword = Nothing
 
 -- Listening Recursion
 listen :: Socket -> Connection -> IO ()
@@ -79,12 +92,39 @@ listen sock db = do
 -- Initialization
 main :: IO ()
 main = do
+  envVars <- getEnvironment
+  let envMap = Data.Map.fromList envVars
+  let envUriString = fromMaybe "http://postgres@127.0.0.1:8900" (Data.Map.lookup "CACHE" envMap)
+
+  let envUri = fromMaybe nullURI (parseURI envUriString)
+
+  let defaultUriAuth = URIAuth {
+      uriUserInfo = "postgres@"
+    , uriRegName = "127.0.0.1"
+    , uriPort = ":5432"
+  }
+  let envUriAuth = fromMaybe defaultUriAuth (uriAuthority envUri)
+  let userInfo = splitOn ":" (uriUserInfo envUriAuth)
+
+  let envDbHost = uriRegName envUriAuth
+  let envDbPort = read (tail (uriPort envUriAuth))
+  let envDbName = fromMaybe "default" (Data.Map.lookup "CACHE_DB" envMap)
+  let envDbUser = head userInfo
+  let envDbPassword = init (userInfo !! 1)
+
+  let dbHost' = fromMaybe envDbHost dbHost
+  let dbPort' = fromMaybe envDbPort dbPort
+  let dbName' = fromMaybe envDbName dbName
+  let dbUser' = fromMaybe envDbUser dbUser
+  let dbPassword' = fromMaybe envDbPassword dbPassword
+
   -- Connect to database.
   db <- connect defaultConnectInfo {
-      connectHost = dbHost
-    , connectDatabase = dbName
-    , connectUser = "postgres"
-    , connectPassword = "abc123"
+      connectHost = dbHost'
+    , connectPort = 5432
+    , connectDatabase = dbName'
+    , connectUser = dbUser'
+    , connectPassword = dbPassword'
     }
 
   -- Connect to socket and login.
