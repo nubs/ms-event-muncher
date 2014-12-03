@@ -1,0 +1,31 @@
+{
+  "name": "ms-event-muncher",
+  "version": "0.1.0",
+  "description": "Persists events to the database.",
+  "main": "brain/stem.js",
+  "dependencies": {
+    "assert-dotenv": "^2.0.0",
+    "bookshelf": "^0.7.9",
+    "help-esb": "^0.4.1",
+    "knex": "^0.7.3",
+    "pg": "^4.0.0",
+    "underscore": "^1.7.0",
+    "underscore.string": "^2.4.0",
+    "uuid": "^2.0.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node brain/stem.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/helpdotcom/ms-event-muncher"
+  },
+  "author": "Alexander Martin",
+  "license": "None",
+  "bugs": {
+    "url": "https://github.com/helpdotcom/ms-event-muncher/issues"
+  },
+  "homepage": "https://github.com/helpdotcom/ms-event-muncher"
+}

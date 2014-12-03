@@ -1,0 +1,15 @@
+// vi:filetype=javascript
+
+;(function() {
+  var self;
+  module.exports = self = {
+    knex: null,
+    bookshelf: null,
+    configure: function(options) {
+      var knex = self.knex = require('knex')(options);
+      var bookshelf = self.bookshelf = require('bookshelf')(knex);
+
+      return bookshelf;
+    }
+  };
+})();

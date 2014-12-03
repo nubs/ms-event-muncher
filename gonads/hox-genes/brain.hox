@@ -1,0 +1,9 @@
+// vi:filetype=javascript
+
+;(function() {
+  'use strict';
+
+  module.exports = {
+    bookshelf: require('./bookshelf.hox')
+  };
+})();
