@@ -1,4 +1,6 @@
 ;(function() {
+  'use strict';
+
   var _ = require('underscore');
       _.str = require('underscore.string');
 

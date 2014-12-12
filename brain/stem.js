@@ -34,20 +34,20 @@ require('assert-dotenv')({}, function() {
   addCommand('chat', 'start');
   addCommand('chat', 'end');
 
-  esbClient.rpcReceive('socketIOGroup', function(payload, meta) {
+  esbClient.rpcReceive('socketIOGroup', function(payload) {
     var message = payload.message;
 
     if (typeof message === 'object' && message.hasOwnProperty('data')) {
       var _event = {
         id: message.meta.id || uuid.v4(),
         createdAt: message.meta.createdAt || new Date(),
-        content: JSON.stringify(message.data),
         type: message.meta.type,
         senderType: message.meta.access || message.data.access || 'FAKE',
-        senderId: message.meta.senderId || message.data.senderId || uuid.v4(),
-        customerId: message.meta.customerId || message.data.customerId || uuid.v4(),
+        senderId: message.meta.senderId || message.data.senderId,
+        customerId: message.meta.customerId || message.data.customerId,
         eventGroupId: message.meta.eventGroupId || message.data.eventGroupId || uuid.v4(),
-        organizationId: message.meta.organizationId || message.data.organizationId || uuid.v4()
+        organizationId: message.meta.organizationId || message.data.organizationId || uuid.v4(),
+        data: JSON.stringify(message.data)
       };
 
       _.extend(_event, message.data, message.meta);
@@ -55,12 +55,12 @@ require('assert-dotenv')({}, function() {
       var event = {
         id: _event.id,
         createdAt: _event.createdAt,
-        content: _event.content,
         type: _event.type,
         senderType: _event.senderType,
         senderId: _event.senderId,
         customerId: _event.customerId,
-        eventGroupId: _event.eventGroupId
+        eventGroupId: _event.eventGroupId,
+        data: _event.data
       };
 
       console.log('socketIOGroup: ' + JSON.stringify(event));
@@ -77,13 +77,13 @@ require('assert-dotenv')({}, function() {
       var _event = {
         id: message.meta.id || uuid.v4(),
         createdAt: message.meta.createdAt || new Date(),
-        content: JSON.stringify(message.data),
         type: message.meta.type,
         senderType: message.meta.access || message.data.access || 'FAKE',
-        senderId: message.meta.senderId || message.data.senderId || uuid.v4(),
-        customerId: message.meta.customerId || message.data.customerId || uuid.v4(),
+        senderId: message.meta.senderId || message.data.senderId,
+        customerId: message.meta.customerId || message.data.customerId,
         eventGroupId: message.meta.eventGroupId || message.data.eventGroupId || uuid.v4(),
-        organizationId: message.meta.organizationId || message.data.organizationId || uuid.v4()
+        organizationId: message.meta.organizationId || message.data.organizationId || uuid.v4(),
+        data: JSON.stringify(message.data)
       };
 
       _.extend(_event, message.data, message.meta);
@@ -91,12 +91,12 @@ require('assert-dotenv')({}, function() {
       var event = {
         id: _event.id,
         createdAt: _event.createdAt,
-        content: _event.content,
         type: _event.type,
         senderType: _event.senderType,
         senderId: _event.senderId,
         customerId: _event.customerId,
-        eventGroupId: _event.eventGroupId
+        eventGroupId: _event.eventGroupId,
+        data: _event.data
       };
 
       console.log('allChatGroup: ' + JSON.stringify(event));
