@@ -1,0 +1,14 @@
+service:
+  build: .
+  environment:
+    ESB:
+    DB:
+servicedev:
+  build: .
+  command: "npm install && gulp dev"
+  volumes:
+  - .:/code
+  environment:
+    ESB:
+    DB:
+  privileged: true
