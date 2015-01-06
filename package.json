@@ -1,6 +1,6 @@
 {
   "name": "ms-event-muncher",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Persists events to the database.",
   "main": "brain/stem.js",
   "dependencies": {
